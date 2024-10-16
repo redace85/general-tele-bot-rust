@@ -13,7 +13,8 @@ Cargo.lock
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 
+# enviroment file
+.env
 
-# Added by cargo
-
-/target
+# sqlite database file
+*.db
