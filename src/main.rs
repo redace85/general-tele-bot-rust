@@ -13,9 +13,9 @@ async fn main() {
     log::info!("Starting bot...");
 
     let auth_token = std::env::var("AUTH_TOKEN").expect("auth_token not set");
-    println!("auth_token: {}", auth_token);
+    log::info!("auth_token: {}", auth_token);
     let db_path = std::env::var("DB_PATH").expect("db_path not set");
-    println!("db_path: {}", db_path);
+    log::info!("db_path: {}", db_path);
 
     let bot = Bot::from_env();
     let states = Arc::new(states::SqliteState::new(db_path.into(), auth_token).unwrap());

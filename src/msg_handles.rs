@@ -22,10 +22,10 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
                 None => String::new(),
             };
 
-            println!("{} is tryint to auth!", username);
+            log::warn!("{} is sending msg!", username);
             bot.send_message(
                 ChatId(chat_id),
-                "❗️❗️❗️{username} is trying to auth the bot ❗️❗️❗️",
+                "❗️❗️❗️{username} is sending msg ❗️❗️❗️",
             )
             .await?;
         } else {
@@ -48,7 +48,7 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
                                         MAIN_SEPARATOR,
                                         arg_path
                                     )
-                                }else{
+                                } else {
                                     String::from(arg_path)
                                 };
 
@@ -87,12 +87,14 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
                         .await?;
                     let res_getfile = bot.get_file(doc.document.file.id).send();
                     let file_info = match res_getfile.await {
-                        Ok(f) => {f}
+                        Ok(f) => f,
                         Err(err) => {
                             if let RequestError::Api(ApiError::Unknown(un_err)) = err {
-                                bot.send_message(msg.chat.id, un_err ).await?;
+                                bot.send_message(msg.chat.id, un_err).await?;
                             }
-                            return Err(RequestError::Api(ApiError::Unknown("file is too big".into())));
+                            return Err(RequestError::Api(ApiError::Unknown(
+                                "file is too big".into(),
+                            )));
                         }
                     };
                     let new_file_path = format!(

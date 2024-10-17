@@ -1,3 +1,4 @@
+use teloxide::payloads::SendMessage;
 use teloxide::{prelude::*, types::InputFile, utils::command::BotCommands};
 
 use std::path::MAIN_SEPARATOR;
@@ -32,13 +33,9 @@ pub async fn entry(
                 // already auth
                 if chat_id != msg.chat.id.0 {
                     let username = msg.from().unwrap().username.clone().unwrap();
+                    let warning_msg = format!("{} is starting the bot", username);
 
-                    println!("{} is starting the bot!", username);
-                    bot.send_message(
-                        ChatId(chat_id),
-                        "❗️❗️❗️{username} is starting the bot ❗️❗️❗️",
-                    )
-                    .await?;
+                    send_warning_notification(&bot, chat_id, warning_msg).await?;
                 } else {
                     bot.send_message(msg.chat.id, "🚩 already auth").await?;
                 }
@@ -53,13 +50,9 @@ pub async fn entry(
                 // already auth
                 if chat_id != msg.chat.id.0 {
                     let username = msg.from().unwrap().username.clone().unwrap();
+                    let warning_msg = format!("{} is trying to auth", username);
 
-                    println!("{} is trying to auth!", username);
-                    bot.send_message(
-                        ChatId(chat_id),
-                        "❗️❗️❗️{username} is trying to auth the bot ❗️❗️❗️",
-                    )
-                    .await?;
+                    send_warning_notification(&bot, chat_id, warning_msg).await?;
                 } else {
                     bot.send_message(msg.chat.id, "🚩 already auth").await?;
                 }
@@ -76,12 +69,9 @@ pub async fn entry(
                 // already auth
                 if chat_id != msg.chat.id.0 {
                     let username = msg.from().unwrap().username.clone().unwrap();
-                    println!("{} is trying to download file!", username);
-                    bot.send_message(
-                        ChatId(chat_id),
-                        "❗️❗️❗️{username} is trying to download file ❗️❗️❗️",
-                    )
-                    .await?;
+                    let warning_msg = format!("{} is trying to download file", username);
+
+                    send_warning_notification(&bot, chat_id, warning_msg).await?;
                 } else {
                     let current_path = states
                         .query_current_path(msg.chat.id.0)
@@ -113,14 +103,11 @@ pub async fn entry(
     Ok(())
 }
 
-// pub async fn start(bot: Bot, msg: Message) -> HandlerResult {
-
-//     let categories = ["Apple", "Banana", "Orange", "Potato"]
-//         .map(|category| KeyboardButton::new(category));
-
-//     bot.send_message(msg.chat.id, "Select a product:")
-//         .reply_markup(KeyboardMarkup::new([categories]).one_time_keyboard(true))
-//         .await?;
-
-//     Ok(())
-// }
+fn send_warning_notification(
+    bot: &Bot,
+    chat_id: i64,
+    msg: String,
+) -> teloxide::requests::JsonRequest<SendMessage> {
+    log::warn!("Warning {}", msg);
+    bot.send_message(ChatId(chat_id), format!("❗️❗️❗️{}❗️❗️❗️", msg))
+}
