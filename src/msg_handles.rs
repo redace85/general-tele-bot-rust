@@ -22,8 +22,10 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
                 None => String::new(),
             };
 
-            log::warn!("{username} is sending msg!");
-            bot.send_message(ChatId(chat_id), "❗️❗️❗️{username} is sending msg ❗️❗️❗️")
+            let warning_msg = format!("{username} is sending msg!");
+
+            log::warn!("{warning_msg}");
+            bot.send_message(ChatId(chat_id), "❗️❗️❗️{warning_msg}❗️❗️❗️")
                 .await?;
         } else {
             let mut ret_text = String::new();
@@ -69,12 +71,15 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
                         let output = cmd
                             .current_dir(&current_path)
                             .arg("-c")
-                            .arg(input_text)
+                            .arg(&input_text)
                             .output();
                         ret_text = match output {
                             Ok(o) => String::from_utf8(o.stdout).unwrap(),
                             Err(e) => e.to_string(),
                         };
+                        if ret_text.is_empty() {
+                            ret_text = format!("⭕️ exe succeed cmd: {input_text}")
+                        }
                     }
                 } else if let MediaKind::Document(doc) = msg_common.media_kind {
                     // receive doc
