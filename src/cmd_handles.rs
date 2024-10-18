@@ -33,7 +33,7 @@ pub async fn entry(
                 // already auth
                 if chat_id != msg.chat.id.0 {
                     let username = msg.from().unwrap().username.clone().unwrap();
-                    let warning_msg = format!("{} is starting the bot", username);
+                    let warning_msg = format!("{username} is starting the bot");
 
                     send_warning_notification(&bot, chat_id, warning_msg).await?;
                 } else {
@@ -50,14 +50,14 @@ pub async fn entry(
                 // already auth
                 if chat_id != msg.chat.id.0 {
                     let username = msg.from().unwrap().username.clone().unwrap();
-                    let warning_msg = format!("{} is trying to auth", username);
+                    let warning_msg = format!("{username} is trying to auth");
 
                     send_warning_notification(&bot, chat_id, warning_msg).await?;
                 } else {
                     bot.send_message(msg.chat.id, "🚩 already auth").await?;
                 }
             } else {
-                // not auth yet please auth
+                // auth
                 if states.get_auth_token() == auth_token {
                     states.set_auth_chat_id(msg.chat.id.0);
                     bot.send_message(msg.chat.id, "✅ auth suceed").await?;
@@ -69,7 +69,7 @@ pub async fn entry(
                 // already auth
                 if chat_id != msg.chat.id.0 {
                     let username = msg.from().unwrap().username.clone().unwrap();
-                    let warning_msg = format!("{} is trying to download file", username);
+                    let warning_msg = format!("{username} is trying to download file");
 
                     send_warning_notification(&bot, chat_id, warning_msg).await?;
                 } else {
@@ -108,6 +108,6 @@ fn send_warning_notification(
     chat_id: i64,
     msg: String,
 ) -> teloxide::requests::JsonRequest<SendMessage> {
-    log::warn!("Warning {}", msg);
-    bot.send_message(ChatId(chat_id), format!("❗️❗️❗️{}❗️❗️❗️", msg))
+    log::warn!("Warning {msg}");
+    bot.send_message(ChatId(chat_id), format!("❗️❗️❗️{msg}❗️❗️❗️"))
 }

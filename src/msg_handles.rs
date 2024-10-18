@@ -22,12 +22,9 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
                 None => String::new(),
             };
 
-            log::warn!("{} is sending msg!", username);
-            bot.send_message(
-                ChatId(chat_id),
-                "❗️❗️❗️{username} is sending msg ❗️❗️❗️",
-            )
-            .await?;
+            log::warn!("{username} is sending msg!");
+            bot.send_message(ChatId(chat_id), "❗️❗️❗️{username} is sending msg ❗️❗️❗️")
+                .await?;
         } else {
             let mut ret_text = String::new();
             if let MessageKind::Common(msg_common) = msg.kind {
@@ -56,9 +53,9 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
                                     let pb = std::fs::canonicalize(new_path.as_str()).unwrap();
                                     new_path = String::from(pb.to_str().unwrap());
                                     states.update_current_path(&OsString::from(new_path.as_str()));
-                                    format!("current path changed: {}", new_path)
+                                    format!("current path changed: {new_path}")
                                 } else {
-                                    format!("path not exists: {}", new_path)
+                                    format!("path not exists: {new_path}")
                                 }
                             }
                             None => {
@@ -83,7 +80,7 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
                     // receive doc
                     let file_name = doc.document.file_name.unwrap();
 
-                    bot.send_message(msg.chat.id, format!("⬇️ downloading file: {}", file_name))
+                    bot.send_message(msg.chat.id, format!("⬇️ downloading file: {file_name}"))
                         .await?;
                     let res_getfile = bot.get_file(doc.document.file.id).send();
                     let file_info = match res_getfile.await {
@@ -106,7 +103,7 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
                     let mut dst = fs::File::create(new_file_path.as_str()).await?;
 
                     bot.download_file(&file_info.path, &mut dst).await?;
-                    ret_text = format!("✅️ file saved to: {}", new_file_path);
+                    ret_text = format!("✅️ file saved to: {new_file_path}");
                 }
             } else {
                 ret_text = format!("unsupported msg type");
