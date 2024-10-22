@@ -112,17 +112,18 @@ pub async fn entry(
 
                     send_warning_notification(&bot, chat_id, warning_msg).await?;
                 } else {
-                    //
+                    // chat with ollama server
                     let ollama_server =
                         std::env::var("OLLAMA_SERVER").unwrap_or("http://localhost:11434".into());
                     let ollama_model = std::env::var("OLLAMA_MODEL").unwrap_or("qwen2.5:7b".into());
 
+                    let quick_msg = bot.send_message(msg.chat.id, "🤔").await?;
                     let ret_text = match model_generate(&ollama_server, &ollama_model, prompt).await {
                         Ok(contenet) => contenet,
                         Err(err) => err,
                     };
-                    // file not exist
-                    bot.send_message(msg.chat.id, ret_text).await?;
+
+                    bot.edit_message_text(msg.chat.id, quick_msg.id, ret_text).await?;
                 }
             } else {
                 // not auth yet
