@@ -135,8 +135,8 @@ mod tests {
 
     #[test]
     fn test_uses() {
-        let token = "test token xxx".to_string();
-        let ss = SqliteState::new("./test.db".into(), token.clone()).unwrap();
+        let token = "test token xxx";
+        let ss = SqliteState::new("./test.db".into(), token.into()).unwrap();
         assert_eq!(ss.token, token);
 
         let chatid = 2_991_384_423i64;

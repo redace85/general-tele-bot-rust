@@ -6,6 +6,8 @@ use std::{path::Path, sync::Arc};
 
 use crate::states::SqliteState;
 
+use crate::ollama_ops::model_generate;
+
 /// These commands are supported:
 #[derive(BotCommands, Clone)]
 #[command(
@@ -19,6 +21,8 @@ pub enum Command {
     Auth(String),
     #[command(description = "Download file")]
     Down(String),
+    #[command(description = "Chat with ollama if exists")]
+    Chat(String),
 }
 
 pub async fn entry(
@@ -91,6 +95,34 @@ pub async fn entry(
                         let inputfile = InputFile::file(file);
                         bot.send_document(msg.chat.id, inputfile).await?;
                     }
+                }
+            } else {
+                // not auth yet
+                bot.send_message(msg.chat.id, "❌ cmd not available before auth")
+                    .await?;
+            }
+        }
+
+        Command::Chat(prompt) => {
+            if let Some(chat_id) = states.get_auth_chat_id() {
+                // already auth
+                if chat_id != msg.chat.id.0 {
+                    let username = msg.from().unwrap().username.clone().unwrap();
+                    let warning_msg = format!("{username} is trying to chat with ollama");
+
+                    send_warning_notification(&bot, chat_id, warning_msg).await?;
+                } else {
+                    //
+                    let ollama_server =
+                        std::env::var("OLLAMA_SERVER").unwrap_or("http://localhost:11434".into());
+                    let ollama_model = std::env::var("OLLAMA_MODEL").unwrap_or("qwen2.5:7b".into());
+
+                    let ret_text = match model_generate(&ollama_server, &ollama_model, prompt).await {
+                        Ok(contenet) => contenet,
+                        Err(err) => err,
+                    };
+                    // file not exist
+                    bot.send_message(msg.chat.id, ret_text).await?;
                 }
             } else {
                 // not auth yet

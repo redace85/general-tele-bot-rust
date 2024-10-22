@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 mod cmd_handles;
 mod msg_handles;
+mod ollama_ops;
 mod states;
 
 #[tokio::main]
