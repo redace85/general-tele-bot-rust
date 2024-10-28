@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -10,7 +10,11 @@ struct GenerateRes {
     total_duration: u64,
 }
 
-pub async fn model_generate(ollama_server: &str, model: &str, prompt: String) -> Result<String, String> {
+pub async fn model_generate(
+    ollama_server: &str,
+    model: &str,
+    prompt: String,
+) -> Result<String, String> {
     let req_data = json!( {
             "model": model,
             "prompt": prompt,
@@ -20,8 +24,11 @@ pub async fn model_generate(ollama_server: &str, model: &str, prompt: String) ->
 
     let client = reqwest::Client::new();
 
-    let req_result = 
-        client.post(format!("{ollama_server}/api/generate")).json(&req_data).send().await;
+    let req_result = client
+        .post(format!("{ollama_server}/api/generate"))
+        .json(&req_data)
+        .send()
+        .await;
 
     let res = match req_result {
         Ok(r) => r,
@@ -36,7 +43,7 @@ pub async fn model_generate(ollama_server: &str, model: &str, prompt: String) ->
 
     let gen_res = match res.json::<GenerateRes>().await {
         Ok(r) => r,
-        Err(e) =>{
+        Err(e) => {
             return Err(e.to_string());
         }
     };

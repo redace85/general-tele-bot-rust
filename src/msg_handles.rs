@@ -2,7 +2,9 @@ use std::ffi::OsString;
 use std::path::Path;
 use std::path::MAIN_SEPARATOR;
 use std::process::Command;
+use std::process::Stdio;
 use std::sync::Arc;
+use std::time::Duration;
 use teloxide::net::Download;
 use teloxide::prelude::*;
 use teloxide::types::MediaKind;
@@ -10,6 +12,7 @@ use teloxide::types::MessageKind;
 use teloxide::ApiError;
 use teloxide::RequestError;
 use tokio::fs;
+use wait_timeout::ChildExt;
 
 use crate::states::SqliteState;
 
@@ -68,15 +71,33 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
                         // execute cmd
                         let mut cmd = Command::new("bash");
 
-                        let output = cmd
+                        let mut child = cmd
                             .current_dir(&current_path)
                             .arg("-c")
                             .arg(&input_text)
-                            .output();
-                        ret_text = match output {
-                            Ok(o) => String::from_utf8(o.stdout).unwrap(),
-                            Err(e) => e.to_string(),
+                            .stdout(Stdio::piped())
+                            .stderr(Stdio::piped())
+                            .spawn()
+                            .unwrap();
+
+                        let time_out = Duration::from_secs(3);
+                        ret_text = match child.wait_timeout(time_out).unwrap() {
+                            Some(exit_status) => {
+                                let output = child.wait_with_output().unwrap();
+                                if exit_status.success() {
+                                    String::from_utf8(output.stdout).unwrap()
+                                } else {
+                                    String::from_utf8(output.stderr).unwrap()
+                                }
+                            }
+                            None => {
+                                // child hasn't exited yet
+                                child.kill().unwrap();
+                                child.wait().unwrap();
+                                "💢 exe timeout ❗️❓".into()
+                            }
                         };
+
                         if ret_text.is_empty() {
                             ret_text = format!("⭕️ exe succeed cmd: {input_text}")
                         }

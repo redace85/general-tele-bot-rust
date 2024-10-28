@@ -118,12 +118,14 @@ pub async fn entry(
                     let ollama_model = std::env::var("OLLAMA_MODEL").unwrap_or("qwen2.5:7b".into());
 
                     let quick_msg = bot.send_message(msg.chat.id, "🤔").await?;
-                    let ret_text = match model_generate(&ollama_server, &ollama_model, prompt).await {
+                    let ret_text = match model_generate(&ollama_server, &ollama_model, prompt).await
+                    {
                         Ok(contenet) => contenet,
                         Err(err) => err,
                     };
 
-                    bot.edit_message_text(msg.chat.id, quick_msg.id, ret_text).await?;
+                    bot.edit_message_text(msg.chat.id, quick_msg.id, ret_text)
+                        .await?;
                 }
             } else {
                 // not auth yet
