@@ -28,7 +28,7 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
             bot.send_message(ChatId(chat_id), "❗️❗️❗️{warning_msg}❗️❗️❗️")
                 .await?;
         } else {
-            let mut ret_text = String::new();
+            let mut ret_text: String;
             if let MessageKind::Common(msg_common) = msg.kind {
                 let current_path = states.query_current_path(chat_id).unwrap_or("/".into());
 
@@ -109,6 +109,8 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
 
                     bot.download_file(&file_info.path, &mut dst).await?;
                     ret_text = format!("✅️ file saved to: {new_file_path}");
+                } else {
+                    ret_text = format!("unsupported media kind: {:?}", msg_common.media_kind);
                 }
             } else {
                 ret_text = format!("unsupported msg type");
