@@ -80,7 +80,7 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
                             .spawn()
                             .unwrap();
 
-                        let time_out = Duration::from_secs(3);
+                        let time_out = Duration::from_secs(states.get_timeout());
                         ret_text = match child.wait_timeout(time_out).unwrap() {
                             Some(exit_status) => {
                                 let output = child.wait_with_output().unwrap();

@@ -17,9 +17,11 @@ async fn main() {
     log::info!("auth_token: {auth_token}");
     let db_path = std::env::var("DB_PATH").expect("db_path not set");
     log::info!("db_path: {db_path}");
+    let timeout = std::env::var("TIMEOUT").expect("timeout not set").parse::<u64>().expect("convert timeout failed");
+    log::info!("timeout: {timeout}");
 
     let bot = Bot::from_env();
-    let states = Arc::new(states::SqliteState::new(db_path.into(), auth_token).unwrap());
+    let states = Arc::new(states::SqliteState::new(db_path.into(), auth_token, timeout).unwrap());
 
     Dispatcher::builder(bot, schema())
         .dependencies(dptree::deps![states])

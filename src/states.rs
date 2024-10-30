@@ -8,10 +8,11 @@ pub struct SqliteState {
     db_path: OsString,
     token: String,
     auth_chat_id: AtomicI64,
+    exe_timeout: u64,
 }
 
 impl SqliteState {
-    pub fn new(path: OsString, token: String) -> Result<SqliteState, String> {
+    pub fn new(path: OsString, token: String, timeout: u64) -> Result<SqliteState, String> {
         let mut is_create_tables = false;
         if !Path::new(&path).exists() {
             is_create_tables = true;
@@ -33,6 +34,7 @@ impl SqliteState {
                 db_path: path.clone(),
                 token,
                 auth_chat_id: AtomicI64::new(0),
+                exe_timeout: timeout,
             })
         } else {
             let query = "SELECT * FROM users LIMIT 1;";
@@ -53,6 +55,7 @@ impl SqliteState {
                 db_path: path.clone(),
                 token,
                 auth_chat_id,
+                exe_timeout: timeout,
             })
         }
     }
@@ -126,6 +129,10 @@ impl SqliteState {
             None
         }
     }
+
+    pub fn get_timeout(&self) -> u64 {
+        self.exe_timeout
+    }
 }
 
 #[cfg(test)]
@@ -136,7 +143,7 @@ mod tests {
     #[test]
     fn test_uses() {
         let token = "test token xxx";
-        let ss = SqliteState::new("./test.db".into(), token.into()).unwrap();
+        let ss = SqliteState::new("./test.db".into(), token.into(), 5).unwrap();
         assert_eq!(ss.token, token);
 
         let chatid = 2_991_384_423i64;
