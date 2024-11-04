@@ -39,7 +39,7 @@ pub async fn entry(
                     let username = msg.from().unwrap().username.clone().unwrap();
                     let warning_msg = format!("{username} is starting the bot");
 
-                    send_warning_notification(&bot, chat_id, warning_msg).await?;
+                    send_warning_notification(&bot, chat_id, &warning_msg).await?;
                 } else {
                     bot.send_message(msg.chat.id, "🚩 already auth").await?;
                 }
@@ -56,7 +56,7 @@ pub async fn entry(
                     let username = msg.from().unwrap().username.clone().unwrap();
                     let warning_msg = format!("{username} is trying to auth");
 
-                    send_warning_notification(&bot, chat_id, warning_msg).await?;
+                    send_warning_notification(&bot, chat_id, &warning_msg).await?;
                 } else {
                     bot.send_message(msg.chat.id, "🚩 already auth").await?;
                 }
@@ -75,7 +75,7 @@ pub async fn entry(
                     let username = msg.from().unwrap().username.clone().unwrap();
                     let warning_msg = format!("{username} is trying to download file");
 
-                    send_warning_notification(&bot, chat_id, warning_msg).await?;
+                    send_warning_notification(&bot, chat_id, &warning_msg).await?;
                 } else {
                     let current_path = states
                         .query_current_path(msg.chat.id.0)
@@ -110,7 +110,7 @@ pub async fn entry(
                     let username = msg.from().unwrap().username.clone().unwrap();
                     let warning_msg = format!("{username} is trying to chat with ollama");
 
-                    send_warning_notification(&bot, chat_id, warning_msg).await?;
+                    send_warning_notification(&bot, chat_id, &warning_msg).await?;
                 } else {
                     // chat with ollama server
                     let ollama_server =
@@ -118,7 +118,7 @@ pub async fn entry(
                     let ollama_model = std::env::var("OLLAMA_MODEL").unwrap_or("qwen2.5:7b".into());
 
                     let quick_msg = bot.send_message(msg.chat.id, "🤔").await?;
-                    let ret_text = match model_generate(&ollama_server, &ollama_model, prompt).await
+                    let ret_text = match model_generate(&ollama_server, &ollama_model, &prompt).await
                     {
                         Ok(contenet) => contenet,
                         Err(err) => err,
@@ -141,7 +141,7 @@ pub async fn entry(
 fn send_warning_notification(
     bot: &Bot,
     chat_id: i64,
-    msg: String,
+    msg: &str,
 ) -> teloxide::requests::JsonRequest<SendMessage> {
     log::warn!("Warning {msg}");
     bot.send_message(ChatId(chat_id), format!("❗️❗️❗️{msg}❗️❗️❗️"))

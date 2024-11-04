@@ -13,7 +13,7 @@ struct GenerateRes {
 pub async fn model_generate(
     ollama_server: &str,
     model: &str,
-    prompt: String,
+    prompt: &str,
 ) -> Result<String, String> {
     let req_data = json!( {
             "model": model,
