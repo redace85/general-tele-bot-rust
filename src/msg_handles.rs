@@ -28,7 +28,7 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
             let warning_msg = format!("{username} is sending msg!");
 
             log::warn!("{warning_msg}");
-            bot.send_message(ChatId(chat_id), "❗️❗️❗️{warning_msg}❗️❗️❗️")
+            bot.send_message(ChatId(chat_id), format!("❗️❗️❗️{warning_msg}❗️❗️❗️"))
                 .await?;
         } else {
             let mut ret_text: String;
@@ -57,7 +57,7 @@ pub async fn entry(bot: Bot, states: Arc<SqliteState>, msg: Message) -> Response
                                 if Path::new(new_path.as_str()).exists() {
                                     let pb = std::fs::canonicalize(new_path.as_str()).unwrap();
                                     new_path = String::from(pb.to_str().unwrap());
-                                    states.update_current_path(&OsString::from(new_path.as_str()));
+                                    states.update_current_path(chat_id, &OsString::from(new_path.as_str()));
                                     format!("current path changed: {new_path}")
                                 } else {
                                     format!("path not exists: {new_path}")

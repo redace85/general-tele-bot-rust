@@ -69,73 +69,73 @@ pub async fn entry(
             }
         }
         Command::Down(file_name) => {
-            if let Some(chat_id) = states.get_auth_chat_id() {
-                // already auth
-                if chat_id != msg.chat.id.0 {
-                    let username = msg.from().unwrap().username.clone().unwrap();
-                    let warning_msg = format!("{username} is trying to download file");
+            let Some(chat_id) = ensure_authorized(&bot, &states, &msg, "is trying to download file").await? else {
+                return Ok(());
+            };
 
-                    send_warning_notification(&bot, chat_id, &warning_msg).await?;
-                } else {
-                    let current_path = states
-                        .query_current_path(msg.chat.id.0)
-                        .unwrap_or("/".into());
-                    let file = format!(
-                        "{}{}{}",
-                        current_path.to_str().unwrap(),
-                        MAIN_SEPARATOR,
-                        file_name
-                    );
+            let current_path = states
+                .query_current_path(chat_id)
+                .unwrap_or("/".into());
+            let file = format!(
+                "{}{}{}",
+                current_path.to_str().unwrap(),
+                MAIN_SEPARATOR,
+                file_name
+            );
 
-                    if !Path::new(&file).is_file() {
-                        // file not exist
-                        bot.send_message(msg.chat.id, "🚫file: {file} no exists")
-                            .await?;
-                    } else {
-                        let inputfile = InputFile::file(file);
-                        bot.send_document(msg.chat.id, inputfile).await?;
-                    }
-                }
-            } else {
-                // not auth yet
-                bot.send_message(msg.chat.id, "❌ cmd not available before auth")
+            if !Path::new(&file).is_file() {
+                bot.send_message(msg.chat.id, format!("🚫 file: {file} not exists"))
                     .await?;
+            } else {
+                let inputfile = InputFile::file(file);
+                bot.send_document(msg.chat.id, inputfile).await?;
             }
         }
 
         Command::Chat(prompt) => {
-            if let Some(chat_id) = states.get_auth_chat_id() {
-                // already auth
-                if chat_id != msg.chat.id.0 {
-                    let username = msg.from().unwrap().username.clone().unwrap();
-                    let warning_msg = format!("{username} is trying to chat with ollama");
+            let Some(_) = ensure_authorized(&bot, &states, &msg, "is trying to chat with ollama").await? else {
+                return Ok(());
+            };
 
-                    send_warning_notification(&bot, chat_id, &warning_msg).await?;
-                } else {
-                    // chat with ollama server
-                    let ollama_server =
-                        std::env::var("OLLAMA_SERVER").unwrap_or("http://localhost:11434".into());
-                    let ollama_model = std::env::var("OLLAMA_MODEL").unwrap_or("qwen2.5:7b".into());
+            let ollama_server =
+                std::env::var("OLLAMA_SERVER").unwrap_or("http://localhost:11434".into());
+            let ollama_model = std::env::var("OLLAMA_MODEL").unwrap_or("qwen2.5:7b".into());
 
-                    let quick_msg = bot.send_message(msg.chat.id, "🤔").await?;
-                    let ret_text = match ollama_ops::model_generate(&ollama_server, &ollama_model, &prompt).await
-                    {
-                        Ok(contenet) => contenet,
-                        Err(err) => err,
-                    };
+            let quick_msg = bot.send_message(msg.chat.id, "🤔").await?;
+            let ret_text = match ollama_ops::model_generate(&ollama_server, &ollama_model, &prompt).await
+            {
+                Ok(content) => content,
+                Err(err) => err,
+            };
 
-                    bot.edit_message_text(msg.chat.id, quick_msg.id, ret_text)
-                        .await?;
-                }
-            } else {
-                // not auth yet
-                bot.send_message(msg.chat.id, "❌ cmd not available before auth")
-                    .await?;
-            }
+            bot.edit_message_text(msg.chat.id, quick_msg.id, ret_text)
+                .await?;
         }
     };
 
     Ok(())
+}
+
+/// Returns `Some(chat_id)` if `msg` is from the authorized user.
+/// Otherwise sends the appropriate notification and returns `None`.
+async fn ensure_authorized(
+    bot: &Bot,
+    states: &Arc<SqliteState>,
+    msg: &Message,
+    action: &str,
+) -> ResponseResult<Option<i64>> {
+    match states.get_auth_chat_id() {
+        None => {
+            bot.send_message(msg.chat.id, "❌ cmd not available before auth").await?;
+            Ok(None)
+        }
+        Some(chat_id) if chat_id != msg.chat.id.0 => {
+            let username = msg.from().unwrap().username.clone().unwrap_or_default();
+            send_warning_notification(bot, chat_id, &format!("{username} {action}")).await?;
+            Ok(None)
+        }
+        Some(chat_id) => Ok(Some(chat_id)),
+    }
 }
 
 fn send_warning_notification(

@@ -76,17 +76,17 @@ impl SqliteState {
         while let Ok(State::Row) = statement.next() {}
     }
 
-    pub fn update_current_path(&self, path: &OsString) {
+    pub fn update_current_path(&self, chat_id: i64, path: &OsString) {
         let connection = Connection::open_thread_safe(&self.db_path).unwrap();
 
-        let query = "UPDATE users SET current_path=:current_path";
+        let query = "UPDATE users SET current_path=:current_path WHERE chat_id=:chat_id";
         let mut statement = connection.prepare(query).unwrap();
 
         statement
-            .bind_iter::<_, (_, Value)>([(
-                ":current_path",
-                path.to_owned().into_string().unwrap().into(),
-            )])
+            .bind_iter::<_, (_, Value)>([
+                (":current_path", path.to_owned().into_string().unwrap().into()),
+                (":chat_id", chat_id.into()),
+            ])
             .unwrap();
 
         while let Ok(State::Row) = statement.next() {}
@@ -150,7 +150,7 @@ mod tests {
         ss.set_auth_chat_id(chatid);
         assert_eq!(ss.get_auth_chat_id().unwrap(), chatid);
         let ospath = OsString::from("/home/x");
-        ss.update_current_path(&ospath);
+        ss.update_current_path(chatid, &ospath);
 
         let cp = ss.query_current_path(chatid).unwrap();
         assert_eq!(cp, ospath);
